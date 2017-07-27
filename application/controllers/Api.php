@@ -509,6 +509,8 @@ public function adduserrole_post(){
  
  $reg_no=$this->post('reg_no');
  $role=$this->post('role');
+ $type=$this->post('type');
+ $upto=$this->post('upto');
 
   
 		$success = true;
@@ -526,7 +528,7 @@ public function adduserrole_post(){
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
-    $receive = $this->api_model->adduserrole($reg_no,$role);
+    $receive = $this->api_model->adduserrole($reg_no,$role,$type,$upto);
 	if($receive==''){
 
      return $this->response('');
@@ -1791,7 +1793,7 @@ return $this->response($receive);
                 }
 }
 
-
+// cron
 public function leaveApprovalCR_get(){
 
 	
@@ -1802,6 +1804,7 @@ return $this->response($receive);
    
                 
 }
+// cron 
 public function crontesting_get(){
 
 	
@@ -1812,10 +1815,24 @@ return $this->response($receive);
    
                 
 }
+
+// cron 
 public function carryforwardCR_get(){
 
 	
     $receive = $this->api_model->carryforwardCR();
+  
+             
+return $this->response($receive);	
+   
+                
+}
+
+// cron
+public function temprolesdelCR_get(){
+
+	
+    $receive = $this->api_model->temprolesdelCR();
   
              
 return $this->response($receive);	
@@ -2627,7 +2644,7 @@ foreach($emails as $na){
 	$i++;
 }
 
- $message =" Delegated Person ". $name ." is ". $status ."  ".  $uname .  "  ' s Leave  Request " ;
+ $message =" Delegated Person ". $name ." is ". $status ."  ".  $uname .  "  \' s Leave  Request " ;
  for($a=0;$a<sizeof($test);$a++){
      $params = Array(
         'to' => $test[$a],

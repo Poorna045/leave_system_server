@@ -135,4 +135,4 @@ $route['addconfig']="api/addconfig";
 $route['carryforwardCR']="api/carryforwardCR";
 $route['leaveApprovalCR']="api/leaveApprovalCR";
 $route['crontesting']="api/crontesting";
-
+$route['temprolesdelCR']="api/temprolesdelCR";

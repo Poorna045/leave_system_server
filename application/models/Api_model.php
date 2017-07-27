@@ -156,14 +156,14 @@ return ;
 }
 
 
-public function adduserrole($reg_no,$role){
+public function adduserrole($reg_no,$role,$type,$upto){
 
  $data=$this->db->query("select * from raghuerp.Role where reg_no = '$reg_no'")->result();
 
    
     if(sizeof($data)==0){
 
-$query=$this->db->query("INSERT INTO `raghuerp`.`Role` (`role_id`, `reg_no`, `role`) VALUES (NULL, '$reg_no', '$role')");
+$query=$this->db->query("INSERT INTO `raghuerp`.`Role` (`role_id`, `reg_no`, `role`,`type`,`upto`) VALUES (NULL, '$reg_no', '$role','$type','$upto')");
 
 
 return ;
@@ -638,7 +638,7 @@ $qe=3;
  
 
 
- $message =  $eid ."' s Leave Request is Closed" ;
+ $message =  $eid ." \' s Leave Request is Closed" ;
 
         $this->db->set('status','Cancelled');
          $this->db->set('reject_reason','Closed');
@@ -715,6 +715,20 @@ if($type=='LOP'){
 
 $pre="INSERT INTO raghuerp.lmscron(`cid`, `cname`, `cyear`) VALUES (NULL,'carryfwd',year(now()))";
 $this->db->query($pre);
+return ;
+}
+
+public function temprolesdelCR(){
+
+ $empCount="select * from Role where upto<=CURDATE() and type='Temporary'";
+      $query5 = $this->db->query($empCount);
+     $data= $query5->result();
+
+     for($k=0;$k<sizeof($data);$k++){
+         $id=$data[$k]->role_id;
+         $sql="DELETE FROM raghuerp.Role WHERE  role_id='$id' ";
+     }
+
 return ;
 }
 
@@ -846,12 +860,18 @@ $mon=$insert['month'];
 for($i=0;$i<sizeof($list);$i++){
     $deptl=$list[$i]->department;
    
-  $depts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  AND ( MONTH(`from_date`)='$mon' OR MONTH(`to_date`)='$mon' )  inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg' and d.department='$deptl'";
+  $depts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type,(select s.firstname from raghuerp_db.staff s where s.reg_no=l.alternateId) as Altername from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  AND ( MONTH(`from_date`)='$mon' OR MONTH(`to_date`)='$mon' )  inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg' and d.department='$deptl'";
     $query8 = $this->db->query($depts);
     // $query['data']=(object) null;
     $query['data'][$deptl] =[];
      $query['data'][$deptl] =$query8->result();
 }
+
+$alldepts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type,(select s.firstname from raghuerp_db.staff s where s.reg_no=l.alternateId) as Altername from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  AND ( MONTH(`from_date`)='$mon' OR MONTH(`to_date`)='$mon' )  inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg'";
+    $querys = $this->db->query($alldepts);
+    // $query['data']=(object) null;
+    $query['data']['ALL'] =[];
+     $query['data']['ALL'] =$querys->result();
 
 
       $bphar="select d.department, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  AND ( MONTH(`l`.`from_date`)='$mon' OR MONTH(`l`.`to_date`)='$mon' )  inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$colg') group by d.department";
@@ -919,13 +939,18 @@ $id=$insert['year'];
 for($i=0;$i<sizeof($list);$i++){
     $deptl=$list[$i]->department;
    
-  $depts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg' and d.department='$deptl'";
+  $depts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type,(select s.firstname from raghuerp_db.staff s where s.reg_no=l.alternateId) as Altername from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg' and d.department='$deptl'";
     $query8 = $this->db->query($depts);
     // $query['data']=(object) null;
     $query['data'][$deptl] =[];
      $query['data'][$deptl] =$query8->result();
 }
 
+$alldepts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type,(select s.firstname from raghuerp_db.staff s where s.reg_no=l.alternateId) as Altername from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg'";
+    $querys = $this->db->query($alldepts);
+    // $query['data']=(object) null;
+    $query['data']['ALL'] =[];
+     $query['data']['ALL'] =$querys->result();
 
       $bphar="select d.department, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no   AND ( YEAR(`l`.`from_date`)='$id' OR YEAR(`l`.`to_date`)='$id' )  inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$colg') group by d.department";
     $query7 = $this->db->query($bphar);
@@ -990,13 +1015,18 @@ $date=$insert['date'];
 for($i=0;$i<sizeof($list);$i++){
     $dept=$list[$i]->department;
    
-  $depts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no  and l.from_date <= concat('$date',' 23:00:00') and l.to_date >= concat('$date',' 00:00:00') inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg' and d.department='$dept'";
+  $depts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type,(select s.firstname from raghuerp_db.staff s where s.reg_no=l.alternateId) as Altername from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no  and l.from_date <= concat('$date',' 23:00:00') and l.to_date >= concat('$date',' 00:00:00') inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg' and d.department='$dept'";
     $query8 = $this->db->query($depts);
     // $query['data']=(object) null;
     $query['data'][$dept] =[];
      $query['data'][$dept] =$query8->result();
 }
 
+$alldepts="select l.*, c.college,d.department,s.firstname,s.email,s.designation,s.employment_type,(select s.firstname from raghuerp_db.staff s where s.reg_no=l.alternateId) as Altername from  raghuerp.leave_issues l left join raghuerp_db.staff s on l.reg_no=s.reg_no  and l.from_date <= concat('$date',' 23:00:00') and l.to_date >= concat('$date',' 00:00:00') inner join  raghuerp_db.departments d on s.department=d.id inner join raghuerp_db.colleges c on d.college=c.id and c.college='$colg'";
+    $querys = $this->db->query($alldepts);
+    // $query['data']=(object) null;
+    $query['data']['ALL'] =[];
+     $query['data']['ALL'] =$querys->result();
 
       $bphar="select d.department, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no  and l.from_date <= concat('$date',' 23:00:00') and l.to_date >= concat('$date',' 00:00:00') inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$colg') group by d.department";
     $query7 = $this->db->query($bphar);
@@ -1195,7 +1225,7 @@ foreach($emails as $na){
 	$i++;
 }
 
- $message =  $acceptedBy ." is ". $type ."  ".  $uname  .  " ' s coff Request " ;
+ $message =  $acceptedBy ." is ". $type ."  ".  $uname  .  " \' s coff Request " ;
 
 
 for($a=0;$a<sizeof($test);$a++){
@@ -1263,7 +1293,7 @@ foreach($emails as $na){
 	$i++;
 }
 
- $message =  $acceptedBy ." is ". $type ."  ".  $uname  .  " ' s Leave Request " ;
+ $message =  $acceptedBy ." is ". $type ."  ".  $uname  .  " \' s Leave Request " ;
 
 for($a=0;$a<sizeof($test);$a++){
      $params = Array(
@@ -1325,7 +1355,7 @@ if($type == 'Rejected'){
  $sql="UPDATE raghuerp.coff set status='$type',rejectedby='$rejectedBy' WHERE cid='$cid' ";
 $this->db->query($sql);
 
- $message =  $role ." is ". $type ."  ".  $uname .  " ' s coff ' s Request " ;
+ $message =  $role ." is ". $type ."  ".  $uname .  " \' s coff \' s Request " ;
  
  $this->sendEmail($test,$message);
 return;
@@ -1334,7 +1364,7 @@ if($type == 'Cancelled'){
  $sql="UPDATE raghuerp.coff set status='$type' WHERE cid='$cid' ";
 $this->db->query($sql);
 
- $message =  $uname  ." is ". $type   .  "  coff ' s Request " ;
+ $message =  $uname  ." is ". $type   .  "  coff \' s Request " ;
 for($a=0;$a<sizeof($test);$a++){
      $params = Array(
         'to' => $test[$a],
@@ -1458,7 +1488,7 @@ foreach($emails as $na){
 
 if($type == 'Rejected'){
 
- $message =  $role ." is ". $type ."  ".  $uname .  " ' s Leave Request " ;
+ $message =  $role ." is ". $type ."  ".  $uname .  " \' s Leave Request " ;
 
         $this->db->set('status','Rejected');
          $this->db->set('rejectedby',$rejectedBy);
@@ -1483,7 +1513,7 @@ return;
 }
 if($type == 'Alternate Suggestion'){
 
- $message =  $role ." is ". $type  ."  ". $uname .  " ' s Leave Request " ;
+ $message =  $role ." is ". $type  ."  ". $uname .  " \' s Leave Request " ;
 
 
  $this->db->set('status','Alternate Suggestion');
@@ -1553,7 +1583,7 @@ public function sendEmail($params)
         $message = $params['message'];
         $type = $params['type'];  // html or ..
        $apptype=$params['apptype']; // eg LeaveSystem or ..
-        $sql = "insert into raghuerp_db.messages(mtype, mailtype, mto, cc, subject, message,application_type) values('mail', '$type', '$to', '$cc', '$subject', '$message','$apptype');";
+        $sql = "insert into raghuerp_db.messages(mtype, mailtype, mto, cc, subject, message,application_type) values('mail', '$type', '$to', '$cc', '$subject', '$message','$apptype')";
         if ($this->db->query($sql)) {
             return (array("success" => true));
         }
