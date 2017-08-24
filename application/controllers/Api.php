@@ -340,15 +340,15 @@ public function deleteleavetype_post(){
 	
 				if ($token->userid) {
 				$this->db->where('type',$this->post('type'));
-$typename=$this->db->get('raghuerp.leavetypes')->row()->typename;
+$typename=$this->db->get('raghuerp_leavesys.leavetypes')->row()->typename;
 
 
-					$sql="DELETE FROM `raghuerp`.`leavetypes` WHERE type='$type'" ;
+					$sql="DELETE FROM `raghuerp_leavesys`.`leavetypes` WHERE type='$type'" ;
  $this->db->query($sql);
 
- $total=$this->db->query("update raghuerp.Type_of_leave a set a.Total=(a.Total-a.".$typename."),a.Remaining=(a.Remaining-a.".$typename.")");
+ $total=$this->db->query("update raghuerp_leavesys.Type_of_leave a set a.Total=(a.Total-a.".$typename."),a.Remaining=(a.Remaining-a.".$typename.")");
 
- $sql2="ALTER TABLE `raghuerp`.`Type_of_leave` DROP `$typename`" ;
+ $sql2="ALTER TABLE `raghuerp_leavesys`.`Type_of_leave` DROP `$typename`" ;
  $this->db->query($sql2);
  
           
@@ -378,7 +378,7 @@ public function getnewUserslist_get(){
 			
 
 
-           $sql2="select s.reg_no,s.dispname,s.employment_type,(select department from raghuerp_db.departments where raghuerp_db.departments.id=s.department ) as department,(select college from raghuerp_db.colleges where s.college=raghuerp_db.colleges.id ) as college,s.designation from raghuerp_db.staff s WHERE NOT EXISTS ( SELECT 1 FROM raghuerp.Type_of_leave t WHERE s.reg_no = t.reg_no )" ;
+           $sql2="select s.reg_no,s.dispname,s.employment_type,(select department from raghuerp_db.departments where raghuerp_db.departments.id=s.department ) as department,(select college from raghuerp_db.colleges where s.college=raghuerp_db.colleges.id ) as college,s.designation from raghuerp_db.staff s WHERE NOT EXISTS ( SELECT 1 FROM raghuerp_leavesys.Type_of_leave t WHERE s.reg_no = t.reg_no )" ;
            $result=$this->db->query($sql2)->result();
  
           
@@ -708,18 +708,18 @@ public function updateleavetype_post(){
 	
 				if ($token->userid) {
 					if($lstatus=='disable'){
-					$sql="update raghuerp.leavetypes l set l.lstatus='$lstatus',l.totaldays=0,l.carryfwd=0 where type='$type' ";
+					$sql="update raghuerp_leavesys.leavetypes l set l.lstatus='$lstatus',l.totaldays=0,l.carryfwd=0 where type='$type' ";
 			
  $this->db->query($sql);
- $sql2="update raghuerp.Type_of_leave  set Total=Total-".$typename.",Remaining=Remaining-".$typename.",$typename=0 ";
+ $sql2="update raghuerp_leavesys.Type_of_leave  set Total=Total-".$typename.",Remaining=Remaining-".$typename.",$typename=0 ";
 			
  $this->db->query($sql2);
 
 
 					}else if($lstatus=='enable'){
-$sql="update raghuerp.leavetypes l set l.lstatus='$lstatus',l.totaldays='$value',l.carryfwd='$carry' where type='$type' ";
+$sql="update raghuerp_leavesys.leavetypes l set l.lstatus='$lstatus',l.totaldays='$value',l.carryfwd='$carry' where type='$type' ";
  $this->db->query($sql);
-  $sql2="update raghuerp.Type_of_leave  set Total=Total+".$value.",Remaining=Remaining+".$value.",$typename='$value' ";
+  $sql2="update raghuerp_leavesys.Type_of_leave  set Total=Total+".$value.",Remaining=Remaining+".$value.",$typename='$value' ";
 			
  $this->db->query($sql2);
 					}
@@ -747,7 +747,7 @@ public function getadmltypes_get(){
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
-					$sql="select * from raghuerp.leavetypes ";
+					$sql="select * from raghuerp_leavesys.leavetypes ";
 $receive = $this->db->query($sql)->result();
           
 return $this->response($receive);	 
@@ -803,7 +803,7 @@ public function getrole_post(){
 				if ($token->userid) {
 				
 			if($utype=='stf'){		
-  $sql="select concat('') as reg_no,concat('') as  dispname,concat('') as designation,concat('') as department,concat('') as college,raghuerp.Role.role from raghuerp.Role where   raghuerp.Role.reg_no='$id' ";
+  $sql="select concat('') as reg_no,concat('') as  dispname,concat('') as designation,concat('') as department,concat('') as college,raghuerp_leavesys.Role.role from raghuerp_leavesys.Role where   raghuerp_leavesys.Role.reg_no='$id' ";
 $query = $this->db->query($sql)->result();
 $query2 = $this->db->query($sql)->row();
 if(sizeof($query)!=0){
@@ -823,7 +823,7 @@ return $this->response($query);
 // return $this->response($receive);	 
        }else if($utype=='adm'){
 
-$sql="select concat('') as reg_no,concat('') as name,raghuerp.Role.role from raghuerp.Role where raghuerp.Role.reg_no='$id' ";
+$sql="select concat('') as reg_no,concat('') as name,raghuerp_leavesys.Role.role from raghuerp_leavesys.Role where raghuerp_leavesys.Role.reg_no='$id' ";
 $query = $this->db->query($sql)->row();
 
 	return $this->response($query);	
@@ -900,11 +900,11 @@ $to=$insert['to_date'];
 
   
     $this->db->where('reg_no',$this->post('reg_no'));
-     $remaining =   $this->db->get('raghuerp.Type_of_leave')->row()->Remaining;
+     $remaining =   $this->db->get('raghuerp_leavesys.Type_of_leave')->row()->Remaining;
 
     
-$sql="SELECT *FROM raghuerp.leave_issues WHERE (('$from' <= from_date AND '$to' > from_date) OR ('$from' < to_date AND '$to' >= to_date)) and  reg_no = '$id' AND status != 'Rejected' AND status != 'Cancelled' AND status != 'Alternate Suggestion'";
-    // $sql="SELECT *FROM raghuerp.leave_issues WHERE (('$from' <= from_date AND '$from' >= to_date) OR ('$to' <= from_date AND '$to' >= to_date)) AND reg_no = '$id' AND status != 'Rejected' AND status != 'Cancelled' AND status != 'Alternate Suggestion'";
+$sql="SELECT *FROM raghuerp_leavesys.leave_issues WHERE (('$from' <= from_date AND '$to' > from_date) OR ('$from' < to_date AND '$to' >= to_date)) and  reg_no = '$id' AND status != 'Rejected' AND status != 'Cancelled' AND status != 'Alternate Suggestion'";
+    // $sql="SELECT *FROM raghuerp_leavesys.leave_issues WHERE (('$from' <= from_date AND '$from' >= to_date) OR ('$to' <= from_date AND '$to' >= to_date)) AND reg_no = '$id' AND status != 'Rejected' AND status != 'Cancelled' AND status != 'Alternate Suggestion'";
 
     $query = $this->db->query($sql);
 
@@ -915,7 +915,7 @@ $result='Already Exists';
 }else{
 
 	$this->db->where('type',$this->post('type'));
-$ltype=$this->db->get('raghuerp.leavetypes')->row()->typename;
+$ltype=$this->db->get('raghuerp_leavesys.leavetypes')->row()->typename;
 
 
 
@@ -973,7 +973,7 @@ $message = $empname .' Details,<br /><br />
 if($insert['type_of_leave']!='LOP'){
 	   
 $this->db->where('reg_no',$this->post('reg_no'));
-$sl=$this->db->get('raghuerp.Type_of_leave')->row()->$ltype;
+$sl=$this->db->get('raghuerp_leavesys.Type_of_leave')->row()->$ltype;
 
 //$sql2="select reg_no,email,dispname from raghuerp_db.staff where (((role='Hod' and department='$dept' ||  role='Principal' )  and college='$colg' )|| reg_no='$altrId'||reg_no='$id')" ;
 
@@ -1012,7 +1012,7 @@ if($sl>=$insert['days']){
     $this->db->set($ltype,($sl-$insert['days']));
      $this->db->set('Remaining',($remaining-$insert['previous']));
     $this->db->where('reg_no',$this->post('reg_no'));
-    $this->db->update('raghuerp.Type_of_leave');
+    $this->db->update('raghuerp_leavesys.Type_of_leave');
 
 
 
@@ -1027,14 +1027,14 @@ if($sl>=$insert['days']){
     $this->db->set($ltype,'0');
          $this->db->set('Remaining',($remaining-$insert['previous']));
     $this->db->where('reg_no',$this->post('reg_no'));
-    $this->db->update('raghuerp.Type_of_leave');
+    $this->db->update('raghuerp_leavesys.Type_of_leave');
 
     $this->db->where('reg_no',$this->post('reg_no'));
-$l=$this->db->get('raghuerp.Type_of_leave')->row()->LOP;
+$l=$this->db->get('raghuerp_leavesys.Type_of_leave')->row()->LOP;
 $lp=$insert['lop'];
-$sql="UPDATE raghuerp.Type_of_leave SET LOP = $lp+$l WHERE reg_no='$id'";
+$sql="UPDATE raghuerp_leavesys.Type_of_leave SET LOP = $lp+$l WHERE reg_no='$id'";
    $this->db->query($sql);
-   $sql2="UPDATE raghuerp.leave_issues SET  lop='$lp' WHERE leave_id='$lastid'";
+   $sql2="UPDATE raghuerp_leavesys.leave_issues SET  lop='$lp' WHERE leave_id='$lastid'";
    $this->db->query($sql2);
 
 
@@ -1051,10 +1051,10 @@ $sql="UPDATE raghuerp.Type_of_leave SET LOP = $lp+$l WHERE reg_no='$id'";
     $result ='apply';
      $this->api_model->leave_Apply($insert);
        $this->db->where('reg_no',$this->post('reg_no'));
-$l=$this->db->get('raghuerp.Type_of_leave')->row()->LOP;
+$l=$this->db->get('raghuerp_leavesys.Type_of_leave')->row()->LOP;
     $this->db->set($ltype,$insert['days']+$l);
     $this->db->where('reg_no',$this->post('reg_no'));
-    $this->db->update('raghuerp.Type_of_leave');
+    $this->db->update('raghuerp_leavesys.Type_of_leave');
 
 
 }
@@ -1134,11 +1134,11 @@ $to=$insert['to_date'];
 
   
     $this->db->where('reg_no',$this->post('reg_no'));
-     $remaining =   $this->db->get('raghuerp.Type_of_leave')->row()->Remaining;
+     $remaining =   $this->db->get('raghuerp_leavesys.Type_of_leave')->row()->Remaining;
 
     
-$sql="SELECT *FROM raghuerp.coff WHERE (('$from' <= from_date AND '$to' > from_date) OR ('$from' < to_date AND '$to' >= to_date)) and  reg_no = '$id' AND status != 'Rejected' ";
-    // $sql="SELECT *FROM raghuerp.leave_issues WHERE (('$from' <= from_date AND '$from' >= to_date) OR ('$to' <= from_date AND '$to' >= to_date)) AND reg_no = '$id' AND status != 'Rejected' AND status != 'Cancelled' AND status != 'Alternate Suggestion'";
+$sql="SELECT *FROM raghuerp_leavesys.coff WHERE (('$from' <= from_date AND '$to' > from_date) OR ('$from' < to_date AND '$to' >= to_date)) and  reg_no = '$id' AND status != 'Rejected' ";
+    // $sql="SELECT *FROM raghuerp_leavesys.leave_issues WHERE (('$from' <= from_date AND '$from' >= to_date) OR ('$to' <= from_date AND '$to' >= to_date)) AND reg_no = '$id' AND status != 'Rejected' AND status != 'Cancelled' AND status != 'Alternate Suggestion'";
 
     $query = $this->db->query($sql);
 
@@ -1332,9 +1332,9 @@ public function coffStatus_post(){
   
 
 
-        $sql="SELECT raghuerp.coff.*,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation,concat('') as role FROM raghuerp.coff
+        $sql="SELECT raghuerp_leavesys.coff.*,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation,concat('') as role FROM raghuerp_leavesys.coff
 		ORDER BY
-   CASE raghuerp.coff.status
+   CASE raghuerp_leavesys.coff.status
       WHEN 'Pending' THEN 1
       WHEN 'Accepted' THEN 2
       WHEN 'Rejected' THEN 3
@@ -1376,9 +1376,9 @@ public function getStatus_post(){
   
     if($role=='HOD'){
 
-        $sql="SELECT raghuerp.leave_issues.* ,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation ,concat('') as  Altername,concat('') as  Alterdept,concat('') as  Altercolg FROM raghuerp.leave_issues where raghuerp.leave_issues.status IN ('Pending','Cancelled','Rejected','Accepted','Alternate Suggestion')
+        $sql="SELECT raghuerp_leavesys.leave_issues.* ,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation ,concat('') as  Altername,concat('') as  Alterdept,concat('') as  Altercolg FROM raghuerp_leavesys.leave_issues where raghuerp_leavesys.leave_issues.status IN ('Pending','Cancelled','Rejected','Accepted','Alternate Suggestion')
 ORDER BY
-   CASE raghuerp.leave_issues.status
+   CASE raghuerp_leavesys.leave_issues.status
       WHEN 'Pending' THEN 1
       WHEN 'Accepted' THEN 2
       WHEN 'Rejected' THEN 3
@@ -1392,13 +1392,13 @@ $receive = $query->result();
     
 }else if($role=='Principal'){
 
-     $sql="SELECT raghuerp.leave_issues.* ,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation,concat('') as role, concat('') as Altername,concat('') as Alterdept,concat('') as  Altercolg,concat('') as Hodname FROM raghuerp.leave_issues where (raghuerp.leave_issues.status='Pending' || raghuerp.leave_issues.status='Accepted')  ";
+     $sql="SELECT raghuerp_leavesys.leave_issues.* ,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation,concat('') as role, concat('') as Altername,concat('') as Alterdept,concat('') as  Altercolg,concat('') as Hodname FROM raghuerp_leavesys.leave_issues where (raghuerp_leavesys.leave_issues.status='Pending' || raghuerp_leavesys.leave_issues.status='Accepted')  ";
 $query = $this->db->query($sql);
 
 $receive = $query->result();
     }else if($role == 'Management'){
 
-       $sql="SELECT raghuerp.leave_issues.* ,concat('') as dispname,concat('') as  college,concat('') as department,concat('') as designation,concat('') as role FROM raghuerp.leave_issues where raghuerp.leave_issues.status ='Pending' ";
+       $sql="SELECT raghuerp_leavesys.leave_issues.* ,concat('') as dispname,concat('') as  college,concat('') as department,concat('') as designation,concat('') as role FROM raghuerp_leavesys.leave_issues where raghuerp_leavesys.leave_issues.status ='Pending' ";
 
 $query = $this->db->query($sql);
 
@@ -1534,7 +1534,7 @@ public function emp_OneAvail_post(){
 	
 				if ($token->userid) {
 
-$sql="SELECT *FROM raghuerp.leave_issues INNER JOIN raghuerp.Type_of_leave ON raghuerp.leave_issues.reg_no = raghuerp.Type_of_leave.reg_no AND raghuerp.leave_issues.leave_id='$lid'";
+$sql="SELECT *FROM raghuerp_leavesys.leave_issues INNER JOIN raghuerp_leavesys.Type_of_leave ON raghuerp_leavesys.leave_issues.reg_no = raghuerp_leavesys.Type_of_leave.reg_no AND raghuerp_leavesys.leave_issues.leave_id='$lid'";
     $query = $this->db->query($sql);
         
 return $this->response($query->row());	 
@@ -2079,7 +2079,7 @@ $id=$this->post('emp_id');
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
-$sql="select * from raghuerp.Type_of_leave where reg_no='$id'";
+$sql="select * from raghuerp_leavesys.Type_of_leave where reg_no='$id'";
 $q1=$this->db->query($sql)->result();
 
         
@@ -2108,11 +2108,11 @@ $dept=$this->post('dept');
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
-// $sql="select raghuerp_db.staff.department as name, count(*) as y from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND college='$colg' AND  raghuerp_db.staff.department!='' and raghuerp.leave_issues.status='Accepted'  group by raghuerp_db.staff.department";
+// $sql="select raghuerp_db.staff.department as name, count(*) as y from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND college='$colg' AND  raghuerp_db.staff.department!='' and raghuerp_leavesys.leave_issues.status='Accepted'  group by raghuerp_db.staff.department";
 // $sql="SELECT department as name,COUNT(*) as y FROM  raghuerp_db.staff WHERE college='$colg' GROUP BY department";
 // $q1=$this->db->query($sql);
 // $query['pm']=$q1->result();
-// $sql2="select raghuerp_db.staff.department as name, count(*) as y from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND college='$colg' AND raghuerp_db.staff.department!='' and raghuerp.leave_issues.status='Accepted' group by raghuerp_db.staff.department";
+// $sql2="select raghuerp_db.staff.department as name, count(*) as y from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND college='$colg' AND raghuerp_db.staff.department!='' and raghuerp_leavesys.leave_issues.status='Accepted' group by raghuerp_db.staff.department";
 // $q2=$this->db->query($sql2);
 // $query['am']=$q2->result();
 
@@ -2123,10 +2123,10 @@ $dept=$this->post('dept');
 // $query['am'] = $this->api_model->GetMultipleQueryResult("call college_leaves_summary('$a1','$a2','$colg')");
 
 
-$sql="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no  and l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$colg') group by d.department";
+$sql="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no  and l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$colg') group by d.department";
 $q1=$this->db->query($sql);
 $query['pm']=$q1->result();
-$sql2="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$colg') group by d.department";
+$sql2="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$colg') group by d.department";
 $q2=$this->db->query($sql2);
 $query['am']=$q2->result();
 
@@ -2161,36 +2161,36 @@ public function getDash_get(){
 	
 				if ($token->userid) {
 // $sql="select count(raghuerp_db.staff.reg_no) as emp_count,
-//     (select count(*) as rec_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC' AND raghuerp.leave_issues.status='Accepted') REC_pM,
-//      (select count(*) as rec_am from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC' AND raghuerp.leave_issues.status='Accepted') REC_aM,
-//      (select count(*) as rit_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT' AND raghuerp.leave_issues.status='Accepted') RIT_pM,
-//      (select count(*) as rit_am from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT' AND raghuerp.leave_issues.status='Accepted') RIT_aM,
-//      (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RCP' AND raghuerp.leave_issues.status='Accepted') RCP_pM,
-//      (select count(*) as rcp_am from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RCP' AND raghuerp.leave_issues.status='Accepted') RCP_aM,
-//        (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='MECH'  AND raghuerp.leave_issues.status='Accepted') RecMech_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='MECH'  AND raghuerp.leave_issues.status='Accepted') RecMech_aM,
-//          (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CSE'  AND raghuerp.leave_issues.status='Accepted') RecCse_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CSE'  AND raghuerp.leave_issues.status='Accepted') RecCse_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='EEE'  AND raghuerp.leave_issues.status='Accepted') RecEee_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='EEE'  AND raghuerp.leave_issues.status='Accepted') RecEee_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp.leave_issues.status='Accepted') RecCivil_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp.leave_issues.status='Accepted') RecCivil_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='ECE'  AND raghuerp.leave_issues.status='Accepted') RecEce_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='ECE'  AND raghuerp.leave_issues.status='Accepted') RecEce_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='MECH'  AND raghuerp.leave_issues.status='Accepted') RitMech_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='MECH'  AND raghuerp.leave_issues.status='Accepted') RitMech_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CSE'  AND raghuerp.leave_issues.status='Accepted') RitCse_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CSE'  AND raghuerp.leave_issues.status='Accepted') RitCse_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='EEE'  AND raghuerp.leave_issues.status='Accepted') RitEee_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='EEE'  AND raghuerp.leave_issues.status='Accepted') RitEee_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp.leave_issues.status='Accepted') RitCivil_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp.leave_issues.status='Accepted') RitCivil_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='ECE'  AND raghuerp.leave_issues.status='Accepted') RitEce_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='ECE'  AND raghuerp.leave_issues.status='Accepted') RitEce_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='M.Pharmacy'  AND raghuerp.leave_issues.status='Accepted') RcpMphar_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='M.Pharmacy'  AND raghuerp.leave_issues.status='Accepted') RcpMphar_aM,
-//             (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='B.Pharmacy'  AND raghuerp.leave_issues.status='Accepted') RcpBphar_pM,
-//            (select count(*) as rcp_pm from raghuerp.leave_issues inner join raghuerp_db.staff on raghuerp.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='B.Pharmacy'  AND raghuerp.leave_issues.status='Accepted') RcpBphar_aM   
+//     (select count(*) as rec_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC' AND raghuerp_leavesys.leave_issues.status='Accepted') REC_pM,
+//      (select count(*) as rec_am from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC' AND raghuerp_leavesys.leave_issues.status='Accepted') REC_aM,
+//      (select count(*) as rit_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT' AND raghuerp_leavesys.leave_issues.status='Accepted') RIT_pM,
+//      (select count(*) as rit_am from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT' AND raghuerp_leavesys.leave_issues.status='Accepted') RIT_aM,
+//      (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RCP' AND raghuerp_leavesys.leave_issues.status='Accepted') RCP_pM,
+//      (select count(*) as rcp_am from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RCP' AND raghuerp_leavesys.leave_issues.status='Accepted') RCP_aM,
+//        (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='MECH'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecMech_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='MECH'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecMech_aM,
+//          (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CSE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecCse_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CSE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecCse_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='EEE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecEee_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='EEE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecEee_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecCivil_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecCivil_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='ECE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecEce_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='REC'  AND raghuerp_db.staff.department='ECE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RecEce_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='MECH'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitMech_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='MECH'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitMech_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CSE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitCse_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CSE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitCse_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='EEE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitEee_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='EEE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitEee_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitCivil_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='CIVIL'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitCivil_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='ECE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitEce_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RIT'  AND raghuerp_db.staff.department='ECE'  AND raghuerp_leavesys.leave_issues.status='Accepted') RitEce_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='M.Pharmacy'  AND raghuerp_leavesys.leave_issues.status='Accepted') RcpMphar_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='M.Pharmacy'  AND raghuerp_leavesys.leave_issues.status='Accepted') RcpMphar_aM,
+//             (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date <= concat(CURDATE(),' 23:00:00') and raghuerp_leavesys.leave_issues.to_date > concat(CURDATE(),' 12:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='B.Pharmacy'  AND raghuerp_leavesys.leave_issues.status='Accepted') RcpBphar_pM,
+//            (select count(*) as rcp_pm from raghuerp_leavesys.leave_issues inner join raghuerp_db.staff on raghuerp_leavesys.leave_issues.reg_no=raghuerp_db.staff.reg_no AND raghuerp_leavesys.leave_issues.from_date < concat(CURDATE(),' 12:00:00') and raghuerp_leavesys.leave_issues.to_date >= concat(CURDATE(),' 00:00:00') AND raghuerp_db.staff.college='RCP'  AND raghuerp_db.staff.department='B.Pharmacy'  AND raghuerp_leavesys.leave_issues.status='Accepted') RcpBphar_aM   
       
 //     from raghuerp_db.staff";
 
@@ -2212,10 +2212,10 @@ $clgs=$this->db->query($sql)->result();
 for($i=0;$i<sizeof($clgs);$i++){
 $name= $clgs[$i]->college;
 
-$sql3="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no  and l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
+$sql3="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no  and l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
 $q1=$this->db->query($sql3);
 $query['pm']=$q1->result();
-$sql4="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
+$sql4="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
 $q2=$this->db->query($sql4);
 $query['am']=$q2->result();
 
@@ -2267,10 +2267,10 @@ $count=sizeof($clgs);
 for($i=0;$i<sizeof($clgs);$i++){
 $name= $clgs[$i]->college;
 
-$sql3="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no  and l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
+$sql3="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no  and l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join  raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
 $q1=$this->db->query($sql3);
 $query['pm']=$q1->result();
-$sql4="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
+$sql4="select d.department as name, count(l.leave_id) as y from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.departments d on s.department=d.id and s.college=(select id from raghuerp_db.colleges c where c.college='$name') group by d.department";
 $q2=$this->db->query($sql4);
 $query['am']=$q2->result();
 
@@ -2322,10 +2322,10 @@ $clgquery="select c.college as name,concat('0') as y,concat(c.college,'-am') as 
 $colgdata=$this->db->query($clgquery)->result();
 
 
-$sql3="select c.college as name, count(l.leave_id) as y,concat(c.college,'-pm') as drilldown from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no and  l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join raghuerp_db.colleges c on s.college=c.id  group by c.college";
+$sql3="select c.college as name, count(l.leave_id) as y,concat(c.college,'-pm') as drilldown from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no and  l.from_date <= concat(CURDATE(),' 23:00:00') and l.to_date > concat(CURDATE(),' 12:00:00') and l.status='Accepted' inner join raghuerp_db.colleges c on s.college=c.id  group by c.college";
 $q1=$this->db->query($sql3);
 $querypm=$q1->result();
-$sql4="select c.college as name, count(l.leave_id) as y,concat(c.college,'-am') as drilldown from raghuerp_db.staff s left join raghuerp.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.colleges c on s.college=c.id  group by c.college";
+$sql4="select c.college as name, count(l.leave_id) as y,concat(c.college,'-am') as drilldown from raghuerp_db.staff s left join raghuerp_leavesys.leave_issues l on s.reg_no=l.reg_no and l.from_date < concat(CURDATE(),' 12:00:00') and l.to_date >= concat(CURDATE(),' 00:00:00') and l.status='Accepted' inner join raghuerp_db.colleges c on s.college=c.id  group by c.college";
 $q2=$this->db->query($sql4);
 $queryam=$q2->result();
 
@@ -2543,7 +2543,7 @@ public function leaveType_get(){
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
-     $sql="SELECT *,concat('0') as value FROM raghuerp.leavetypes where lstatus='enable'";
+     $sql="SELECT *,concat('0') as value FROM raghuerp_leavesys.leavetypes where lstatus='enable'";
 
     $query = $this->db->query($sql);
      $this->response($query->result());
@@ -2571,7 +2571,7 @@ public function alternateData_post(){
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
- $sql="SELECT l.*,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation FROM raghuerp.leave_issues l where l.alternateId='$id' AND l.alternateStatus IN ('Pending','Rejected','Accepted')
+ $sql="SELECT l.*,concat('') as dispname,concat('') as college,concat('') as department,concat('') as designation FROM raghuerp_leavesys.leave_issues l where l.alternateId='$id' AND l.alternateStatus IN ('Pending','Rejected','Accepted')
 ORDER BY
    CASE l.alternateStatus
       WHEN 'Pending' THEN 1
@@ -2614,7 +2614,7 @@ public function alternateAccept_post(){
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
- $sql="UPDATE raghuerp.leave_issues SET alternateStatus='$status',delegatedreason='$reason' WHERE leave_id='$lid' ";
+ $sql="UPDATE raghuerp_leavesys.leave_issues SET alternateStatus='$status',delegatedreason='$reason' WHERE leave_id='$lid' ";
 
 
     $query = $this->db->query($sql);
@@ -2626,7 +2626,7 @@ public function alternateAccept_post(){
 // $test=$this->db->query($sql2)->result();
 $test=$emailHOD;
 
-$sql3="select email from raghuerp.configuration where designation='Director' || designation='Chairman'" ;
+$sql3="select email from raghuerp_leavesys.configuration where designation='Director' || designation='Chairman'" ;
 
 $emails=$this->db->query($sql3)->result();
 
@@ -2683,7 +2683,7 @@ public function cancelStatus_post(){
 				$token = JWT::decode($_SERVER['HTTP_TOKEN'], $this->config->item('jwt_key'));
 	
 				if ($token->userid) {
- $sql="UPDATE raghuerp.leave_issues SET status='Cancelled' WHERE leave_id='$lid' ";
+ $sql="UPDATE raghuerp_leavesys.leave_issues SET status='Cancelled' WHERE leave_id='$lid' ";
     $query = $this->db->query($sql);
   
 return;	
@@ -2777,7 +2777,7 @@ return $this->response($query->result());
        public function getEmail_get(){
            
 
-		   $sql="select * from raghuerp.configuration";
+		   $sql="select * from raghuerp_leavesys.configuration";
 		   $emails=$this->db->query($sql);
 		   return $this->response($emails->result());
         }
